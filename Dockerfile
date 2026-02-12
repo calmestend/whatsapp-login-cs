@@ -8,16 +8,17 @@ RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list \
  && apt-get install -y mono-xsp4 wget unzip \
  && rm -rf /var/lib/apt/lists/*
 
+RUN wget https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -O /usr/local/bin/nuget.exe \
+ && echo '#!/bin/bash\nmono /usr/local/bin/nuget.exe "$@"' > /usr/local/bin/nuget \
+ && chmod +x /usr/local/bin/nuget
+
 RUN mkdir -p /app/bin
 
-# Descargar e instalar Newtonsoft.Json
-RUN wget https://www.nuget.org/api/v2/package/Newtonsoft.Json/13.0.3 -O /tmp/newtonsoft.zip && \
-    unzip -q /tmp/newtonsoft.zip -d /tmp/newtonsoft && \
-    cp /tmp/newtonsoft/lib/net45/Newtonsoft.Json.dll /app/bin/Newtonsoft.Json.dll && \
-    rm -rf /tmp/newtonsoft /tmp/newtonsoft.zip
+RUN nuget install Newtonsoft.Json -OutputDirectory /app/packages \
+ && cp /app/packages/Newtonsoft.Json.*/lib/net45/Newtonsoft.Json.dll /app/bin/ || \
+    cp /app/packages/Newtonsoft.Json.*/lib/net40/Newtonsoft.Json.dll /app/bin/
 
 COPY . /app
-
 RUN ls -la /app/bin/
 
 EXPOSE 8080

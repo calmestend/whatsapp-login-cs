@@ -1,22 +1,27 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="FacebookCallback.aspx.cs" Inherits="FacebookCallback" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" Async="true"
+    CodeFile="FacebookCallback.aspx.cs"
+    Inherits="FacebookCallback"
+    ValidateRequest="false"
+    EnableEventValidation="false" %>
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8" />
     <title>Smuebleria - WhatsApp Login</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
+            padding: 40px;
+            max-width: 600px;
+            margin: auto;
         }
         button {
             background-color: #25D366;
             color: white;
-            padding: 12px 24px;
             border: none;
-            border-radius: 5px;
+            padding: 12px 24px;
             font-size: 16px;
+            border-radius: 5px;
             cursor: pointer;
         }
         button:hover {
@@ -26,73 +31,66 @@
 </head>
 <body>
     <form id="form1" runat="server">
-        <div id="fb-root"></div>
-        <h1>Smuebleria - WhatsApp Login</h1>
-        
-        <asp:HiddenField ID="hfCode" runat="server" />
-        <button type="button" onclick="launchWhatsAppSignup()">Conectar WhatsApp Business</button>
+        <h2>Conectar WhatsApp Business</h2>
+        <button type="button" onclick="launchWhatsAppSignup()">
+            Conectar WhatsApp
+        </button>
     </form>
     
     <script>
-        window.fbAsyncInit = function() {
-            FB.init({
-                appId: '1260594759179359',
-                autoLogAppEvents: true,
-                xfbml: true,
-                version: 'v20.0'   
-            });
-        };
-
-			function launchWhatsAppSignup() {
-					FB.login(function(response) {
-							console.log('FB.login full response:', JSON.stringify(response, null, 2));
-
-							if (response && response.authResponse) {
-									var code = response.authResponse.code;
-									console.log('Code recibido en JS:', code);
-
-									if (code) {
-											// Envía el code por AJAX POST
-											fetch('FacebookCallback.aspx', {
-													method: 'POST',
-													headers: {
-															'Content-Type': 'application/x-www-form-urlencoded'
-													},
-													body: 'hfCode=' + encodeURIComponent(code)  // Envía como si fuera el hidden field
-											})
-											.then(response => response.text())
-											.then(data => {
-													console.log('Respuesta del servidor:', data);
-													alert('Código enviado al servidor. Revisa los logs para detalles.');
-											})
-											.catch(err => {
-													console.error('Error en AJAX:', err);
-											});
-									} else {
-											console.warn('No hay code en authResponse');
-									}
-							} else {
-									console.warn('No authResponse o login fallido', response);
-							}
-					}, {
-							config_id: '1482981399558000',
-							response_type: 'code',
-							override_default_response_type: true,
-							extras: {
-									"version": "v3",
-									"featureType": "whatsapp_business_app_onboarding"
-							}
-					});
-			}
-
-        (function(d, s, id){
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) return;
-            js = d.createElement(s); 
-            js.id = id;
-            js.src = "https://connect.facebook.net/es_LA/sdk.js";
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
+        const REDIRECT_URI = 'https://whatsapp-login-cs-production.up.railway.app/FacebookCallback.aspx';
+        
+        function launchWhatsAppSignup() {
+            const appId = '1260594759179359';
+            const configId = '1482981399558000';
+            const state = Math.random().toString(36).substring(7);
+            
+            const authUrl = `https://www.facebook.com/v24.0/dialog/oauth?` +
+                `client_id=${appId}` +
+                `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+                `&response_type=code` +
+                `&config_id=${configId}` +
+                `&state=${encodeURIComponent(state)}` +
+                `&extras=${encodeURIComponent(JSON.stringify({
+                    version: 'v3',
+                    featureType: 'whatsapp_business_app_onboarding'
+                }))}`;
+            
+            sessionStorage.setItem('fb_state', state);
+            
+            window.location.href = authUrl;
+        }
+        
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const savedState = sessionStorage.getItem('fb_state');
+            
+            if (code && state === savedState) {
+                console.log('Code received:', code);
+                
+                sessionStorage.removeItem('fb_state');
+                
+                fetch('FacebookCallback.aspx', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'hfCode=' + encodeURIComponent(code)
+                })
+                .then(r => r.text())
+                .then(data => {
+                    console.log('Response:', data);
+                    alert('WhatsApp conectado exitosamente');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Error al conectar WhatsApp');
+                });
+            }
+        });
     </script>
 </body>
 </html>
