@@ -87,7 +87,7 @@ public partial class FacebookCallback : Page
             string code = Request.Form["hfCode"];
             
             Console.WriteLine("code: " + (code ?? "NULL"));
-            Console.WriteLine("redirect_uri: " + _redirectUri);
+            // Console.WriteLine("redirect_uri: " + _redirectUri);
 
             if (string.IsNullOrEmpty(code))
             {
@@ -116,7 +116,7 @@ public partial class FacebookCallback : Page
             EtiquetawabaId.Text = "";
             EtiquetaError.Visible = false;
 
-            Console.WriteLine("codigo: " + code.ToString());
+            // Console.WriteLine("codigo: " + code.ToString());
             // err.GenerarErrores("Login WhatsApp", "codigo " + code, 0);
             if (!string.IsNullOrEmpty(code))
             {
@@ -134,7 +134,7 @@ public partial class FacebookCallback : Page
                 //WebClient client = new WebClient();
 
                 // err.GenerarErrores("Login WhatsApp", "url " + url, 0);
-                Console.WriteLine("url " + url);
+                // Console.WriteLine("url " + url);
                 //client.Headers[HttpRequestHeader.ContentType] = "application/json";
                 //client.Headers[HttpRequestHeader.UserAgent] = "ASP.NET-App";
 
@@ -156,6 +156,7 @@ public partial class FacebookCallback : Page
                 dynamic jsonObject = JsonConvert.DeserializeObject(jsonResponse);
 
                 string accessToken = jsonObject.access_token;
+								Console.WriteLine("access_token " + accessToken);
 
                 EtiquetaaccessToken.Text = accessToken;
 
@@ -273,6 +274,7 @@ public partial class FacebookCallback : Page
                         // Deserializar el JSON a un objeto dinámico
                         //jsonObject = JsonConvert.DeserializeObject(jsonResponse);
                         RootObjectWebID webid = JsonConvert.DeserializeObject<RootObjectWebID>(jsonResponse);
+												Console.WriteLine("webid: " + webid.Data);
 
                         if (webid.Data.Count > 0)
                         {
@@ -330,6 +332,7 @@ public partial class FacebookCallback : Page
                                 // Deserializar el JSON a un objeto dinámico
                                 //jsonObject = JsonConvert.DeserializeObject(jsonResponse);
                                 RootObjectPhoneID phoneid = JsonConvert.DeserializeObject<RootObjectPhoneID>(jsonResponse);
+																Console.WriteLine("phoneid: " + phoneid.Data );
 
                                 var phoneNumbers = new List<Combos>();
 
